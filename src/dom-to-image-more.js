@@ -5,7 +5,11 @@
     const inliner = newInliner();
     const fontFaces = newFontFaces();
     const images = newImages();
-
+    const offscreen = {
+        position: 'fixed',
+        left: '-9999px',
+        visibility: 'hidden',
+    };
     // Default impl options
     const defaultOptions = {
         // Default is to copy default styles of elements
@@ -782,6 +786,7 @@
             const base = doc.createElement('base');
             doc.head.appendChild(base);
             const a = doc.createElement('a');
+            a.style = offscreen;
             doc.body.appendChild(a);
             base.href = baseUrl;
             a.href = url;
@@ -839,6 +844,7 @@
                 };
 
                 svg.appendChild(image);
+                svg.style = { ...svg.style, ...offscreen };
                 image.src = uri;
 
                 // Add the SVG to the document body (invisible)
@@ -1472,8 +1478,7 @@
         // render at all with `display: none`, so we have to use `visibility: hidden` with `position: fixed`.
         sandbox = document.createElement('iframe');
         sandbox.id = 'domtoimage-sandbox-' + util.uid();
-        sandbox.style.visibility = 'hidden';
-        sandbox.style.position = 'fixed';
+        sandbox.style = offscreen;
         document.body.appendChild(sandbox);
 
         return tryTechniques(
