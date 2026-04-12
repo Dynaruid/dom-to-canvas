@@ -201,25 +201,42 @@ export function makeImage(
     });
 }
 
-function asBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+function asBlob(
+    canvas: HTMLCanvasElement,
+    type = "image/png",
+    quality?: number,
+): Promise<Blob> {
     return new Promise((resolve) => {
-        const binaryString = atob(canvas.toDataURL().split(",")[1]!);
+        const binaryString = atob(canvas.toDataURL(type, quality).split(",")[1]!);
         const length = binaryString.length;
         const binaryArray = new Uint8Array(length);
         for (let i = 0; i < length; i++) {
             binaryArray[i] = binaryString.charCodeAt(i);
         }
-        resolve(new Blob([binaryArray], { type: "image/png" }));
+        resolve(new Blob([binaryArray], { type }));
     });
 }
 
-export function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+export function canvasToBlob(
+    canvas: HTMLCanvasElement,
+    type = "image/png",
+    quality?: number,
+): Promise<Blob> {
     if (canvas.toBlob) {
         return new Promise((resolve) => {
-            canvas.toBlob((blob) => resolve(blob!));
+            canvas.toBlob((blob) => resolve(blob!), type, quality);
         });
     }
-    return asBlob(canvas);
+    return asBlob(canvas, type, quality);
+}
+
+export function blobToDataUrl(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(reader.error);
+        reader.onloadend = () => resolve(String(reader.result));
+        reader.readAsDataURL(blob);
+    });
 }
 
 export function resolveUrl(url: string, baseUrl: string): string {
