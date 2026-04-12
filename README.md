@@ -1,9 +1,19 @@
 # dom-to-canvas
 
-Generates an image from a DOM node using HTML5 canvas and SVG.
-TypeScript rewrite of [dom-to-image-more](https://github.com/1904labs/dom-to-image-more), published via JSR.
+[![JSR](https://jsr.io/badges/@dynaruid/dom-to-canvas)](https://jsr.io/@dynaruid/dom-to-canvas)
+[![JSR Score](https://jsr.io/badges/@dynaruid/dom-to-canvas/score)](https://jsr.io/@dynaruid/dom-to-canvas)
+[![JSR Weekly Downloads](https://jsr.io/badges/@dynaruid/dom-to-canvas/weekly-downloads)](https://jsr.io/@dynaruid/dom-to-canvas)
+
+Generate an image from a DOM node with HTML5 canvas and SVG.
+TypeScript rewrite of [dom-to-image-more](https://github.com/1904labs/dom-to-image-more), published on JSR.
 
 This package renders browser DOM nodes. Use it in a browser or a browser-like DOM environment.
+
+## Why
+
+- Export any DOM subtree as PNG, JPEG, SVG, Blob, canvas, or raw pixel data.
+- Keep computed styles, form values, fonts, and images in the rendered output.
+- Use one API across browser apps, tests, and browser-like DOM environments.
 
 ## Install
 
@@ -19,7 +29,7 @@ bunx jsr add @dynaruid/dom-to-canvas
 npx jsr add @dynaruid/dom-to-canvas
 ```
 
-## Usage
+## Quick Start
 
 ```ts
 import {
@@ -56,6 +66,17 @@ const canvas = await toCanvas(node, { scale: 2 });
 const pixels = await toPixelData(node);
 ```
 
+## Outputs
+
+| Function | Result |
+| --- | --- |
+| `toSvg(node, options?)` | SVG data URL |
+| `toPng(node, options?)` | PNG data URL |
+| `toJpeg(node, options?)` | JPEG data URL |
+| `toBlob(node, options?)` | PNG `Blob` |
+| `toCanvas(node, options?)` | `HTMLCanvasElement` |
+| `toPixelData(node, options?)` | `Uint8ClampedArray` |
+
 ## API
 
 ### `toSvg(node, options?): Promise<string>`
@@ -70,7 +91,7 @@ const pixels = await toPixelData(node);
 
 ### `toPixelData(node, options?): Promise<Uint8ClampedArray>`
 
-### Options
+## Options
 
 | Option                | Type                           | Default    | Description                         |
 | --------------------- | ------------------------------ | ---------- | ----------------------------------- |
@@ -96,6 +117,12 @@ const pixels = await toPixelData(node);
 - The package needs `window`, `document`, canvas, and image APIs.
 - Cross-origin images and fonts still depend on the browser's security model.
 - For Node-based tests, use a browser-like DOM such as `jsdom`.
+
+## Links
+
+- [JSR package](https://jsr.io/@dynaruid/dom-to-canvas)
+- [API docs](https://jsr.io/@dynaruid/dom-to-canvas/doc)
+- [GitHub repository](https://github.com/Dynaruid/dom-to-canvas)
 
 ## Development
 
