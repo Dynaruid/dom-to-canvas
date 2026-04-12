@@ -41,6 +41,27 @@ describe("toSvg", () => {
         expect(host.querySelectorAll("span").length).toBe(0);
     });
 
+    test("restores a wrapped bare text node when rendering fails", async () => {
+        const host = document.createElement("div");
+        const bareText = document.createTextNode("bare text");
+
+        host.append(bareText);
+        document.body.append(host);
+
+        await expect(
+            toSvg(bareText, {
+                ...TEST_OPTIONS,
+                onclone() {
+                    throw new Error("boom");
+                },
+            }),
+        ).rejects.toThrow("boom");
+
+        expect(host.childNodes.length).toBe(1);
+        expect(host.lastChild).toBe(bareText);
+        expect(host.querySelectorAll("span").length).toBe(0);
+    });
+
     test("applies clone-time mutations and rendering options", async () => {
         const node = document.createElement("div");
         node.textContent = "Original";

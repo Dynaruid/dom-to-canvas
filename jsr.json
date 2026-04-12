@@ -1,6 +1,14 @@
 {
-  "name": "@Dynaruid/dom-to-canvas",
+  "name": "@dynaruid/dom-to-canvas",
   "version": "0.1.0",
   "license": "MIT",
-  "exports": "./index.ts"
+  "exports": "./index.ts",
+  "publish": {
+    "include": [
+      "LICENSE",
+      "README.md",
+      "index.ts",
+      "src/**/*.ts"
+    ]
+  }
 }

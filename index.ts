@@ -8,14 +8,17 @@ import { removeSandbox } from "./src/sandbox.ts";
 
 export type { Options, CorsImgConfig } from "./src/types.ts";
 
-// ─── Public API ─────────────────────────────────────────
-
 interface Restoration {
-    parent: Node;
+    parent: Node | null;
     child: Node;
     wrapper: HTMLSpanElement;
 }
 
+/**
+ * Serialize a DOM node into an SVG data URL.
+ *
+ * This is the lowest-level export and is the basis for the raster outputs.
+ */
 export function toSvg(node: Node, options: Options = {}): Promise<string> {
     const ownerWindow = util.getWindow(node);
     copyImplOptions(options);
@@ -32,16 +35,19 @@ export function toSvg(node: Node, options: Options = {}): Promise<string> {
         )
         .then((clone) => applyOptions(clone as Node))
         .then(makeSvgDataUri)
-        .then(restoreWrappers)
-        .then(clearCache);
+        .finally(cleanup);
 
     function ensureElement(n: Node): Node {
         if (n.nodeType === Node.ELEMENT_NODE) return n;
 
         const originalChild = n;
-        const originalParent = n.parentNode!;
-        const wrappingSpan = document.createElement("span");
-        originalParent.replaceChild(wrappingSpan, originalChild);
+        const originalParent = n.parentNode;
+        const wrappingSpan = (n.ownerDocument ?? ownerWindow.document).createElement(
+            "span",
+        );
+        if (originalParent) {
+            originalParent.replaceChild(wrappingSpan, originalChild);
+        }
         wrappingSpan.append(n);
         restorations.push({
             parent: originalParent,
@@ -51,18 +57,24 @@ export function toSvg(node: Node, options: Options = {}): Promise<string> {
         return wrappingSpan;
     }
 
-    function restoreWrappers(result: string): string {
+    function restoreWrappers(): void {
         while (restorations.length > 0) {
             const restoration = restorations.pop()!;
-            restoration.parent.replaceChild(restoration.child, restoration.wrapper);
+            if (restoration.parent) {
+                restoration.parent.replaceChild(
+                    restoration.child,
+                    restoration.wrapper,
+                );
+            } else if (restoration.child.parentNode === restoration.wrapper) {
+                restoration.wrapper.removeChild(restoration.child);
+            }
         }
-        return result;
     }
 
-    function clearCache(result: string): string {
+    function cleanup(): void {
+        restoreWrappers();
         clearUrlCache();
         removeSandbox();
-        return result;
     }
 
     function applyOptions(clone: Node): Promise<Node> {
@@ -103,6 +115,7 @@ export function toSvg(node: Node, options: Options = {}): Promise<string> {
     }
 }
 
+/** Render a DOM node and return its raw RGBA pixel data. */
 export function toPixelData(
     node: Node,
     options?: Options,
@@ -114,28 +127,30 @@ export function toPixelData(
     );
 }
 
+/** Render a DOM node and return a PNG data URL. */
 export function toPng(node: Node, options?: Options): Promise<string> {
     return draw(node, options).then((canvas) => canvas.toDataURL());
 }
 
+/** Render a DOM node and return a JPEG data URL. */
 export function toJpeg(node: Node, options?: Options): Promise<string> {
     return draw(node, options).then((canvas) =>
         canvas.toDataURL("image/jpeg", options?.quality ?? 1.0),
     );
 }
 
+/** Render a DOM node and return a PNG blob. */
 export function toBlob(node: Node, options?: Options): Promise<Blob> {
     return draw(node, options).then(util.canvasToBlob);
 }
 
+/** Render a DOM node into a canvas element. */
 export function toCanvas(
     node: Node,
     options?: Options,
 ): Promise<HTMLCanvasElement> {
     return draw(node, options);
 }
-
-// ─── Internal helpers ───────────────────────────────────
 
 function embedFonts(node: Node): Promise<Node> {
     return resolveAllFontFaces().then((cssText) => {
