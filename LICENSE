@@ -1,19 +1,6 @@
 MIT License
 
-Copyright (c) 2026 Dynaruid
-
-This project is a TypeScript rewrite derived from dom-to-image-more.
-
-Additional upstream copyright notices:
-
-Copyright 2018 Marc Brooks
-https://about.me/idisposable
-
-Copyright 2015 Anatolii Saienko
-https://github.com/tsayen
-
-Copyright 2012 Paul Bakaus
-http://paulbakaus.com/
+Copyright (c) 2026 phantom
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
