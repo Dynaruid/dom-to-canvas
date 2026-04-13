@@ -8,17 +8,37 @@ React bindings for `@dynaruid/dom-to-canvas`.
 
 ## Install
 
+### Deno / JSR
+
 ```bash
 deno add jsr:@dynaruid/dom-to-canvas-react
 ```
 
+### npm / Node / Bun
+
 ```bash
-bunx jsr add @dynaruid/dom-to-canvas-react
+npm install @dynaruid/dom-to-canvas-react
 ```
 
 ```bash
-npx jsr add @dynaruid/dom-to-canvas-react
+pnpm add @dynaruid/dom-to-canvas-react
 ```
+
+```bash
+yarn add @dynaruid/dom-to-canvas-react
+```
+
+```bash
+bun add @dynaruid/dom-to-canvas-react
+```
+
+### Deno via npm
+
+```bash
+deno add npm:@dynaruid/dom-to-canvas-react
+```
+
+The npm package ships ESM output in `dist/` and installs `@dynaruid/dom-to-canvas` automatically. `react` remains a peer dependency and should already exist in the host app.
 
 ## Quick Start
 

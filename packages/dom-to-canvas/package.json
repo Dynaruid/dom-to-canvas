@@ -4,6 +4,15 @@
   "description": "Generates an image from a DOM node using HTML5 canvas and SVG",
   "license": "MIT",
   "author": "Dynaruid",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dynaruid/dom-to-canvas.git",
+    "directory": "packages/dom-to-canvas"
+  },
+  "homepage": "https://github.com/Dynaruid/dom-to-canvas/tree/main/packages/dom-to-canvas",
+  "bugs": {
+    "url": "https://github.com/Dynaruid/dom-to-canvas/issues"
+  },
   "contributors": [
     {
       "name": "Marc Brooks",
@@ -18,14 +27,33 @@
       "url": "http://paulbakaus.com/"
     }
   ],
-  "module": "index.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "type": "module",
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepack": "npm run build",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "exports": {
-    ".": "./index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "deno": "./index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "index.ts",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": [
     "dom",
@@ -40,9 +68,7 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/jsdom": "^28.0.1",
-    "jsdom": "^29.0.2"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
+    "jsdom": "^29.0.2",
+    "typescript": "^5.9.3"
   }
 }

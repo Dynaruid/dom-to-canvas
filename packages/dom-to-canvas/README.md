@@ -18,17 +18,37 @@ This package renders browser DOM nodes. Use it in a browser or a browser-like DO
 
 ## Install
 
+### Deno / JSR
+
 ```bash
 deno add jsr:@dynaruid/dom-to-canvas
 ```
 
+### npm / Node / Bun
+
 ```bash
-bunx jsr add @dynaruid/dom-to-canvas
+npm install @dynaruid/dom-to-canvas
 ```
 
 ```bash
-npx jsr add @dynaruid/dom-to-canvas
+pnpm add @dynaruid/dom-to-canvas
 ```
+
+```bash
+yarn add @dynaruid/dom-to-canvas
+```
+
+```bash
+bun add @dynaruid/dom-to-canvas
+```
+
+### Deno via npm
+
+```bash
+deno add npm:@dynaruid/dom-to-canvas
+```
+
+JSR is the recommended path for Deno. The npm package ships ESM output in `dist/`, while Deno consumers can keep using the source TypeScript entry.
 
 ## Quick Start
 
