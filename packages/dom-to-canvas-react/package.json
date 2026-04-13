@@ -1,5 +1,5 @@
 {
-  "name": "dom-to-canvas-react",
+  "name": "@dynaruid/dom-to-canvas-react",
   "version": "0.1.0",
   "description": "React bindings for dom-to-canvas",
   "license": "MIT",
@@ -28,8 +28,10 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
+  "dependencies": {
+    "@dynaruid/dom-to-canvas": "workspace:*"
+  },
   "peerDependencies": {
-    "dom-to-canvas": "workspace:*",
     "react": ">=18",
     "typescript": "^5"
   }

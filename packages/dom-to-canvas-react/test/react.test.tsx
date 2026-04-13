@@ -13,7 +13,7 @@ import { setupDomEnvironment } from "./support/dom.ts";
 
 const dom = setupDomEnvironment();
 const reactDomCanvas = await import("../src/react.tsx");
-const { Renderer } = await import("dom-to-canvas");
+const { Renderer } = await import("@dynaruid/dom-to-canvas");
 
 const { DomFrame, useDomFrame, useDomRenderer } =
   reactDomCanvas;

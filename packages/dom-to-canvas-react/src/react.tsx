@@ -4,11 +4,15 @@ import {
   useEffect,
   useRef,
   type CSSProperties,
+  type ReactElement,
   type ReactNode
 } from "react";
 
-import { Renderer, type RenderSize } from "dom-to-canvas";
-import type { Options } from "dom-to-canvas";
+import {
+  Renderer,
+  type RenderSize,
+} from "@dynaruid/dom-to-canvas";
+import type { Options } from "@dynaruid/dom-to-canvas";
 
 export interface DomPixelDataResult {
   pixels: Uint8Array;
@@ -108,7 +112,7 @@ export function DomFrame({
   onFrame,
   className,
   style
-}: DomFrameProps) {
+}: DomFrameProps): ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<Renderer | null>(null);
   const inFlightRef = useRef(false);
