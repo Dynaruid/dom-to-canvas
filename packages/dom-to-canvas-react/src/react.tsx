@@ -5,7 +5,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
-  type MutableRefObject,
+  type RefObject,
   type ReactElement,
   type ReactNode
 } from "react";
@@ -504,7 +504,7 @@ function normalizePixelWriteTarget(
 }
 
 export function useCanvasHandle(
-  ref: MutableRefObject<HTMLElement | null>,
+  ref: RefObject<HTMLElement | null>,
   options?: Options
 ): CanvasHandle | null {
   const [handle, setHandle] = useState<CanvasHandle | null>(
