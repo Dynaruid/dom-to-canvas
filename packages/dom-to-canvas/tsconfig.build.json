@@ -9,13 +9,6 @@
     "sourceMap": true,
     "rewriteRelativeImportExtensions": true
   },
-  "include": [
-    "index.ts",
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "dist",
-    "test",
-    "old"
-  ]
+  "include": ["index.ts", "src/**/*.ts"],
+  "exclude": ["dist", "test", "old"]
 }
