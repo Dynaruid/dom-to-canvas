@@ -1,36 +1,38 @@
 # dom-to-canvas
 
-Monorepo for the dom-to-canvas packages.
-
-This repository contains the core DOM-to-image renderer and the separate React bindings package.
+Monorepo for the `@dynaruid/dom-to-canvas` core renderer and the `@dynaruid/dom-to-canvas-react` bindings package.
 
 ## Packages
 
-### dom-to-canvas
+| Package | Location | Summary |
+| --- | --- | --- |
+| `@dynaruid/dom-to-canvas` | `packages/dom-to-canvas` | One-shot DOM export helpers plus live `getCanvas(node, options?)` handles |
+| `@dynaruid/dom-to-canvas-react` | `packages/dom-to-canvas-react` | React bindings for frame callbacks and live canvas handles |
 
-Core package for rendering DOM nodes to SVG, PNG, JPEG, Blob, or pixel buffers.
+## API Shape
 
-Location: `packages/dom-to-canvas`
+### One-shot export
 
-### dom-to-canvas-react
+Use the core package when you want a single capture:
 
-React bindings built on top of the core renderer.
+- `toSvg`
+- `toPng`
+- `toJpeg`
+- `toBlob`
+- `toPixelData`
+- `copyPixelData`
+- `toCanvas` as a deprecated compatibility alias
 
-Location: `packages/dom-to-canvas-react`
+### Live rendering
 
-## Package Overview
+Use `getCanvas(node, options?)` when you want a persistent canvas that can be re-rendered, started, stopped, resized, and disposed.
 
-### dom-to-canvas
+Live handles support two invalidation modes:
 
-- Browser-focused DOM renderer
-- Exposes `toSvg`, `toPixelData`, `copyPixelData`, `toPng`, `toJpeg`, `toBlob`, and `Renderer`
-- No React dependency
+- `mode: "dirty"` renders once, then waits for DOM mutation, resize, or explicit `update()` / `resize()` calls.
+- `mode: "continuous"` renders every animation frame while running.
 
-### dom-to-canvas-react
-
-- React helpers for frame-based DOM capture workflows
-- Depends on `dom-to-canvas` as a peer dependency
-- Keeps React-specific code out of the core package
+CSS animations and transitions should use `mode: "continuous"`. Dirty mode does not try to sample pure computed-style animation frames automatically.
 
 ## Repository Layout
 
@@ -53,6 +55,7 @@ Run core package tests:
 ```bash
 cd packages/dom-to-canvas
 bun test
+bun run typecheck
 ```
 
 Run React package tests:
@@ -60,12 +63,13 @@ Run React package tests:
 ```bash
 cd packages/dom-to-canvas-react
 bun test
+bun run typecheck
 ```
 
 ## Publishing Notes
 
 - `packages/dom-to-canvas` is the publishable core package.
-- `packages/dom-to-canvas-react` contains the React bindings package.
+- `packages/dom-to-canvas-react` is the publishable React bindings package.
 
 ## License
 

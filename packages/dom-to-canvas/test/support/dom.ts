@@ -31,6 +31,8 @@ type ManagedKey =
     | "FileReader"
     | "XMLHttpRequest"
     | "Image"
+    | "MutationObserver"
+    | "ResizeObserver"
     | "getComputedStyle"
     | "requestAnimationFrame"
     | "cancelAnimationFrame"
@@ -66,6 +68,8 @@ const MANAGED_KEYS: ManagedKey[] = [
     "FileReader",
     "XMLHttpRequest",
     "Image",
+    "MutationObserver",
+    "ResizeObserver",
     "getComputedStyle",
     "requestAnimationFrame",
     "cancelAnimationFrame",
@@ -123,6 +127,16 @@ export function setupDomEnvironment(): DomEnvironment {
         FileReader: window.FileReader,
         XMLHttpRequest: window.XMLHttpRequest,
         Image: window.Image,
+        MutationObserver: (window as unknown as Record<string, unknown>).MutationObserver ?? class StubMutationObserver {
+            observe() { }
+            disconnect() { }
+            takeRecords() { return []; }
+        },
+        ResizeObserver: (window as unknown as Record<string, unknown>).ResizeObserver ?? class StubResizeObserver {
+            observe() { }
+            unobserve() { }
+            disconnect() { }
+        },
         getComputedStyle: window.getComputedStyle.bind(window),
         requestAnimationFrame: window.requestAnimationFrame.bind(window),
         cancelAnimationFrame: window.cancelAnimationFrame.bind(window),

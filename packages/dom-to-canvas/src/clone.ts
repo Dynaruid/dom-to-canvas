@@ -1,18 +1,19 @@
 import type { Options } from "./types.ts";
-import { state } from "./state.ts";
+import type { RenderSession } from "./state.ts";
 import * as util from "./util.ts";
-import { copyUserComputedStyleFast } from "./sandbox.ts";
+import { getSandboxNode, copyUserComputedStyleFast } from "./sandbox.ts";
 
 export function cloneNode(
     node: Node,
     options: Options,
     parentComputedStyles: CSSStyleDeclaration | null,
     ownerWindow: Window,
+    session: RenderSession,
 ): Promise<Node | undefined> {
     const filter = options.filter;
 
     if (
-        node === (state.sandbox as Node | null) ||
+        node === getSandboxNode() ||
         util.isHTMLScriptElement(node) ||
         util.isHTMLStyleElement(node) ||
         util.isHTMLLinkElement(node) ||
@@ -30,7 +31,7 @@ export function cloneNode(
 
     function makeNodeCopy(original: Node): Node | Promise<Node> {
         if (util.isHTMLCanvasElement(original)) {
-            return util.makeImage(original.toDataURL()).then((img) => img!);
+            return util.makeImage(original.toDataURL(), session).then((img) => img!);
         }
         return original.cloneNode(false);
     }
@@ -72,6 +73,7 @@ export function cloneNode(
                         options,
                         originalComputedStyles,
                         ownerWindow,
+                        session,
                     ).then((clonedChild) => {
                         if (clonedChild) clone.appendChild(clonedChild);
                     }),

@@ -22,6 +22,8 @@ npx jsr add @dynaruid/dom-to-canvas-react
 
 ## Quick Start
 
+### Frame callback workflow
+
 ```tsx
 import { DomFrame, useDomFrame } from "@dynaruid/dom-to-canvas-react";
 
@@ -46,11 +48,50 @@ export function App() {
 }
 ```
 
+### Live handle workflow
+
+```tsx
+import { useEffect, useRef } from "react";
+import { useCanvasHandle } from "@dynaruid/dom-to-canvas-react";
+
+export function LivePreview() {
+  const sourceRef = useRef<HTMLDivElement | null>(null);
+  const handle = useCanvasHandle(sourceRef, {
+    mode: "continuous",
+    scale: 2
+  });
+
+  useEffect(() => {
+    if (handle === null) {
+      return;
+    }
+
+    document.body.append(handle.canvas);
+    void handle.render();
+    handle.start();
+
+    return () => {
+      handle.stop();
+    };
+  }, [handle]);
+
+  return <div ref={sourceRef}>Hello canvas</div>;
+}
+```
+
 ## Exports
 
 - `DomFrame`
+- `useCanvasHandle`
 - `useDomRenderer`
 - `useDomFrame`
+- `CanvasHandle` type re-export
+
+## Choosing an API
+
+- Use `DomFrame` when you want a React-owned frame clock and per-frame callback subscriptions.
+- Use `useCanvasHandle` when you want the core live `getCanvas` handle from an element ref.
+- For CSS animations or transitions that need to be reflected in the canvas continuously, pass `mode: "continuous"`.
 
 ## Development
 

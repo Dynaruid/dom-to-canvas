@@ -3,14 +3,18 @@ import {
   useContext,
   useEffect,
   useRef,
+  useState,
   type CSSProperties,
+  type MutableRefObject,
   type ReactElement,
   type ReactNode
 } from "react";
 
 import {
   Renderer,
+  getCanvas,
   type RenderSize,
+  type CanvasHandle
 } from "@dynaruid/dom-to-canvas";
 import type { Options } from "@dynaruid/dom-to-canvas";
 
@@ -497,4 +501,54 @@ function normalizePixelWriteTarget(
   }
 
   return prepared;
+}
+
+export function useCanvasHandle(
+  ref: MutableRefObject<HTMLElement | null>,
+  options?: Options
+): CanvasHandle | null {
+  const [handle, setHandle] = useState<CanvasHandle | null>(null);
+  const previousOptionsRef = useRef<Options | undefined>(options);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) {
+      setHandle(null);
+      return;
+    }
+
+    const nextHandle = getCanvas(el, options);
+    previousOptionsRef.current = options;
+    setHandle(nextHandle);
+
+    return () => {
+      setHandle((current) =>
+        current === nextHandle ? null : current
+      );
+      nextHandle.dispose();
+    };
+  }, [ref]);
+
+  useEffect(() => {
+    if (handle === null) {
+      return;
+    }
+
+    const previousOptions = previousOptionsRef.current ?? {};
+    const nextOptions = options ?? {};
+    const updateOptions = {
+      ...nextOptions
+    } as Options & Record<string, unknown>;
+
+    for (const key of Object.keys(previousOptions) as Array<keyof Options>) {
+      if (!(key in nextOptions)) {
+        updateOptions[key] = undefined;
+      }
+    }
+
+    handle.update(updateOptions);
+    previousOptionsRef.current = options;
+  }, [handle, options]);
+
+  return handle;
 }

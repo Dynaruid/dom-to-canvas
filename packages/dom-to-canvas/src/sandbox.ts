@@ -1,8 +1,16 @@
 import type { Options } from "./types.ts";
-import { state, OFFSCREEN } from "./state.ts";
+import { OFFSCREEN } from "./state.ts";
 import * as util from "./util.ts";
 
 const ELEMENT_NODE = typeof Node !== "undefined" ? Node.ELEMENT_NODE : 1;
+
+let _sandbox: HTMLIFrameElement | null = null;
+let _removeDefaultStylesTimeoutId: ReturnType<typeof setTimeout> | null = null;
+const _tagNameDefaultStyles: Record<string, Record<string, string>> = {};
+
+export function getSandboxNode(): Node | null {
+    return _sandbox;
+}
 
 const ASCENT_STOPPERS = [
     "ADDRESS", "ARTICLE", "ASIDE", "BLOCKQUOTE", "DETAILS", "DIALOG",
@@ -38,7 +46,7 @@ export function copyUserComputedStyleFast(
     parentComputedStyles: CSSStyleDeclaration | null,
     targetElement: Element,
 ): void {
-    const defaultStyle = state.options.copyDefaultStyles
+    const defaultStyle = options.copyDefaultStyles !== false
         ? getDefaultStyle(options, sourceElement)
         : {};
     const targetStyle = (targetElement as HTMLElement).style;
@@ -74,8 +82,8 @@ export function getDefaultStyle(
     const tagHierarchy = computeTagHierarchy(sourceElement);
     const tagKey = computeTagKey(options, tagHierarchy);
 
-    if (state.tagNameDefaultStyles[tagKey]) {
-        return state.tagNameDefaultStyles[tagKey]!;
+    if (_tagNameDefaultStyles[tagKey]) {
+        return _tagNameDefaultStyles[tagKey]!;
     }
 
     const sandboxWindow = ensureSandboxWindow();
@@ -86,7 +94,7 @@ export function getDefaultStyle(
     const defaultStyle = computeStyleForDefaults(sandboxWindow, defaultElement);
     destroyElementHierarchy(defaultElement);
 
-    state.tagNameDefaultStyles[tagKey] = defaultStyle;
+    _tagNameDefaultStyles[tagKey] = defaultStyle;
     return defaultStyle;
 }
 
@@ -160,8 +168,8 @@ function destroyElementHierarchy(element: Element): void {
 }
 
 export function ensureSandboxWindow(): Window {
-    if (state.sandbox) {
-        return state.sandbox.contentWindow!;
+    if (_sandbox) {
+        return _sandbox.contentWindow!;
     }
 
     const charsetToUse = document.characterSet || "UTF-8";
@@ -172,13 +180,13 @@ export function ensureSandboxWindow(): Window {
         )} ${escapeHTML(docType.systemId)}`.trim() + ">"
         : "";
 
-    state.sandbox = document.createElement("iframe");
-    state.sandbox.id = "domtoimage-sandbox-" + util.uid();
-    Object.assign(state.sandbox.style, OFFSCREEN);
-    document.body.appendChild(state.sandbox);
+    _sandbox = document.createElement("iframe");
+    _sandbox.id = "domtoimage-sandbox-" + util.uid();
+    Object.assign(_sandbox.style, OFFSCREEN);
+    document.body.appendChild(_sandbox);
 
     return tryTechniques(
-        state.sandbox,
+        _sandbox,
         docTypeDeclaration,
         charsetToUse,
         "domtoimage-sandbox",
@@ -229,17 +237,19 @@ function tryTechniques(
 }
 
 export function removeSandbox(): void {
-    if (state.sandbox) {
-        document.body.removeChild(state.sandbox);
-        state.sandbox = null;
+    if (_sandbox) {
+        document.body.removeChild(_sandbox);
+        _sandbox = null;
     }
 
-    if (state.removeDefaultStylesTimeoutId) {
-        clearTimeout(state.removeDefaultStylesTimeoutId);
+    if (_removeDefaultStylesTimeoutId) {
+        clearTimeout(_removeDefaultStylesTimeoutId);
     }
 
-    state.removeDefaultStylesTimeoutId = setTimeout(() => {
-        state.removeDefaultStylesTimeoutId = null;
-        state.tagNameDefaultStyles = {};
+    _removeDefaultStylesTimeoutId = setTimeout(() => {
+        _removeDefaultStylesTimeoutId = null;
+        for (const key of Object.keys(_tagNameDefaultStyles)) {
+            delete _tagNameDefaultStyles[key];
+        }
     }, 20_000);
 }

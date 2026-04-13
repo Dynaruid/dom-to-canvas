@@ -17,29 +17,48 @@ const DEFAULTS: ImplOptions = {
     corsImg: undefined,
 };
 
-export const state = {
-    urlCache: [] as CacheEntry[],
-    options: { ...DEFAULTS } as ImplOptions,
-    sandbox: null as HTMLIFrameElement | null,
-    removeDefaultStylesTimeoutId: null as ReturnType<typeof setTimeout> | null,
-    tagNameDefaultStyles: {} as Record<string, Record<string, string>>,
-};
+export class RenderSession {
+    urlCache: CacheEntry[] = [];
+    options: ImplOptions;
 
-export function copyImplOptions(options: Partial<ImplOptions>): void {
-    state.options.copyDefaultStyles =
-        options.copyDefaultStyles ?? DEFAULTS.copyDefaultStyles;
-    state.options.imagePlaceholder =
-        options.imagePlaceholder ?? DEFAULTS.imagePlaceholder;
-    state.options.cacheBust = options.cacheBust ?? DEFAULTS.cacheBust;
-    state.options.corsImg = options.corsImg ?? DEFAULTS.corsImg;
-    state.options.useCredentials =
-        options.useCredentials ?? DEFAULTS.useCredentials;
-    state.options.useCredentialsFilters =
-        options.useCredentialsFilters ?? [...DEFAULTS.useCredentialsFilters];
-    state.options.httpTimeout = options.httpTimeout ?? DEFAULTS.httpTimeout;
-    state.options.styleCaching = options.styleCaching ?? DEFAULTS.styleCaching;
-}
+    constructor(userOptions: Partial<ImplOptions> = {}) {
+        this.options = {
+            copyDefaultStyles:
+                userOptions.copyDefaultStyles ?? DEFAULTS.copyDefaultStyles,
+            imagePlaceholder:
+                userOptions.imagePlaceholder ?? DEFAULTS.imagePlaceholder,
+            cacheBust: userOptions.cacheBust ?? DEFAULTS.cacheBust,
+            useCredentials:
+                userOptions.useCredentials ?? DEFAULTS.useCredentials,
+            useCredentialsFilters: [
+                ...(userOptions.useCredentialsFilters ??
+                    DEFAULTS.useCredentialsFilters),
+            ],
+            httpTimeout: userOptions.httpTimeout ?? DEFAULTS.httpTimeout,
+            styleCaching: userOptions.styleCaching ?? DEFAULTS.styleCaching,
+            corsImg: userOptions.corsImg ?? DEFAULTS.corsImg,
+        };
+    }
 
-export function clearUrlCache(): void {
-    state.urlCache = [];
+    updateOptions(userOptions: Partial<ImplOptions>): void {
+        this.options.copyDefaultStyles =
+            userOptions.copyDefaultStyles ?? DEFAULTS.copyDefaultStyles;
+        this.options.imagePlaceholder =
+            userOptions.imagePlaceholder ?? DEFAULTS.imagePlaceholder;
+        this.options.cacheBust = userOptions.cacheBust ?? DEFAULTS.cacheBust;
+        this.options.useCredentials =
+            userOptions.useCredentials ?? DEFAULTS.useCredentials;
+        this.options.useCredentialsFilters = [
+            ...(userOptions.useCredentialsFilters ??
+                DEFAULTS.useCredentialsFilters),
+        ];
+        this.options.httpTimeout = userOptions.httpTimeout ?? DEFAULTS.httpTimeout;
+        this.options.styleCaching =
+            userOptions.styleCaching ?? DEFAULTS.styleCaching;
+        this.options.corsImg = userOptions.corsImg ?? DEFAULTS.corsImg;
+    }
+
+    clearUrlCache(): void {
+        this.urlCache = [];
+    }
 }

@@ -1,24 +1,26 @@
 import * as util from "./util.ts";
 import * as inliner from "./inliner.ts";
+import type { RenderSession } from "./state.ts";
 
 interface WebFont {
     resolve(): Promise<string>;
     src(): string;
 }
 
-export function resolveAll(): Promise<string> {
-    return readAll()
+export function resolveAll(session: RenderSession): Promise<string> {
+    return readAll(session)
         .then((webFonts) =>
             Promise.all(webFonts.map((webFont) => webFont.resolve())),
         )
         .then((cssStrings) => cssStrings.join("\n"));
 }
 
-function readAll(): Promise<WebFont[]> {
+function readAll(session: RenderSession): Promise<WebFont[]> {
+    const get = (url: string) => util.getAndEncode(url, session);
     return Promise.resolve(util.asArray(document.styleSheets))
         .then(getCssRules)
         .then(selectWebFontRules)
-        .then((rules) => rules.map(newWebFont));
+        .then((rules) => rules.map((rule) => newWebFont(rule, get)));
 }
 
 function selectWebFontRules(cssRules: CSSRule[]): CSSFontFaceRule[] {
@@ -51,11 +53,14 @@ function getCssRules(styleSheets: CSSStyleSheet[]): CSSRule[] {
     return cssRules;
 }
 
-function newWebFont(webFontRule: CSSFontFaceRule): WebFont {
+function newWebFont(
+    webFontRule: CSSFontFaceRule,
+    get: (url: string) => Promise<string>,
+): WebFont {
     return {
         resolve() {
             const baseUrl = webFontRule.parentStyleSheet?.href ?? undefined;
-            return inliner.inlineAll(webFontRule.cssText, baseUrl);
+            return inliner.inlineAll(webFontRule.cssText, baseUrl, get);
         },
         src() {
             return webFontRule.style.getPropertyValue("src");

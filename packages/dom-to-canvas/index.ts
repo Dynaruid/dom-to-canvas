@@ -1,125 +1,195 @@
-import type { Options } from "./src/types.ts";
-import { copyImplOptions, clearUrlCache } from "./src/state.ts";
+import type { CanvasRenderMode, Options } from "./src/types.ts";
+import { RenderSession } from "./src/state.ts";
 import { Renderer } from "./src/renderer.ts";
-import * as util from "./src/util.ts";
-import { resolveAll as resolveAllFontFaces } from "./src/font-faces.ts";
-import { inlineAll as inlineAllImages } from "./src/images.ts";
-import { cloneNode } from "./src/clone.ts";
-import {
-    resolveRenderFrame,
-    type ResolvedRenderFrame,
-} from "./src/render-size.ts";
+import { buildSvgDataUri } from "./src/pipeline.ts";
+import { resolveRenderFrame } from "./src/render-size.ts";
 import { removeSandbox } from "./src/sandbox.ts";
 
-export type { Options, CorsImgConfig } from "./src/types.ts";
+export type { CanvasRenderMode, Options, CorsImgConfig } from "./src/types.ts";
 export type {
     PixelCopyResult,
     RenderSize,
 } from "./src/renderer.ts";
 export { Renderer } from "./src/renderer.ts";
+export { RenderSession } from "./src/state.ts";
 
-// ─── Public API ─────────────────────────────────────────
+// ─── CanvasHandle ───────────────────────────────────────
 
-interface Restoration {
-    parent: Node;
-    child: Node;
-    wrapper: HTMLSpanElement;
+export interface CanvasHandle {
+    readonly canvas: HTMLCanvasElement;
+    readonly node: Node;
+    readonly options: Options;
+    readonly isRendering: boolean;
+    readonly isRunning: boolean;
+    readonly frame: number;
+
+    render(options?: Options): Promise<HTMLCanvasElement>;
+    start(): void;
+    stop(): void;
+    update(options: Options): void;
+    resize(options?: Options): void;
+    dispose(): void;
 }
+
+export function getCanvas(
+    node: Node,
+    options: Options = {},
+): CanvasHandle {
+    const renderer = new Renderer();
+    let currentOptions = { ...options };
+    let running = false;
+    let rendering = false;
+    let frameCount = 0;
+    let rafId = 0;
+    let disposed = false;
+    let mutationObserver: MutationObserver | null = null;
+    let resizeObserver: ResizeObserver | null = null;
+    let dirty = true;
+
+    const handle: CanvasHandle = {
+        get canvas() {
+            return renderer.canvas;
+        },
+        get node() {
+            return node;
+        },
+        get options() {
+            return currentOptions;
+        },
+        get isRendering() {
+            return rendering;
+        },
+        get isRunning() {
+            return running;
+        },
+        get frame() {
+            return frameCount;
+        },
+
+        async render(opts?: Options): Promise<HTMLCanvasElement> {
+            if (disposed) throw new Error("CanvasHandle has been disposed");
+            const mergedOptions = opts ? { ...currentOptions, ...opts } : currentOptions;
+            rendering = true;
+            try {
+                const canvas = await renderer.render(node, mergedOptions);
+                frameCount++;
+                dirty = false;
+                return canvas;
+            } finally {
+                rendering = false;
+            }
+        },
+
+        start() {
+            if (disposed) throw new Error("CanvasHandle has been disposed");
+            if (running) return;
+            running = true;
+            dirty = true;
+            startObservers();
+            scheduleFrame();
+        },
+
+        stop() {
+            if (!running) return;
+            running = false;
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+                rafId = 0;
+            }
+            stopObservers();
+        },
+
+        update(opts: Options) {
+            if (disposed) throw new Error("CanvasHandle has been disposed");
+            currentOptions = { ...currentOptions, ...opts };
+            dirty = true;
+        },
+
+        resize(opts?: Options) {
+            if (disposed) throw new Error("CanvasHandle has been disposed");
+            if (opts) {
+                currentOptions = { ...currentOptions, ...opts };
+            }
+            dirty = true;
+        },
+
+        dispose() {
+            if (disposed) return;
+            disposed = true;
+            handle.stop();
+            renderer.dispose();
+            removeSandbox();
+        },
+    };
+
+    return handle;
+
+    // ── live loop helpers ─────────────────────────────────
+
+    function scheduleFrame() {
+        if (!running || disposed) return;
+        rafId = requestAnimationFrame(async () => {
+            if (!running || disposed) return;
+            if (shouldRenderFrame() && !rendering) {
+                try {
+                    await handle.render();
+                    dirty = false;
+                } catch (error) {
+                    console.error("[dom-to-canvas] render failed:", error);
+                }
+            }
+            scheduleFrame();
+        });
+    }
+
+    function startObservers() {
+        if (node.nodeType !== Node.ELEMENT_NODE) return;
+        const el = node as Element;
+
+        mutationObserver = new MutationObserver(() => {
+            dirty = true;
+        });
+        mutationObserver.observe(el, {
+            childList: true,
+            attributes: true,
+            characterData: true,
+            subtree: true,
+        });
+
+        resizeObserver = new ResizeObserver(() => {
+            dirty = true;
+        });
+        resizeObserver.observe(el);
+    }
+
+    function stopObservers() {
+        if (mutationObserver) {
+            mutationObserver.disconnect();
+            mutationObserver = null;
+        }
+        if (resizeObserver) {
+            resizeObserver.disconnect();
+            resizeObserver = null;
+        }
+    }
+
+    function shouldRenderFrame(): boolean {
+        return getRenderMode(currentOptions) === "continuous" || dirty;
+    }
+}
+
+// ─── One-shot Public API ────────────────────────────────
 
 export function toSvg(
     node: Node,
     options: Options = {},
-    frame: ResolvedRenderFrame = resolveRenderFrame(node, options),
 ): Promise<string> {
-    const ownerWindow = util.getWindow(node);
-    copyImplOptions(options);
-    const restorations: Restoration[] = [];
-
-    return Promise.resolve(node)
-        .then(ensureElement)
-        .then((clonee) => cloneNode(clonee, options, null, ownerWindow))
-        .then((clone) =>
-            options.disableEmbedFonts ? clone : embedFonts(clone as Node),
-        )
-        .then((clone) =>
-            options.disableInlineImages ? clone : inlineImages(clone as Node),
-        )
-        .then((clone) => applyOptions(clone as Node))
-        .then(makeSvgDataUri)
-        .then(restoreWrappers)
-        .then(clearCache);
-
-    function ensureElement(n: Node): Node {
-        if (n.nodeType === Node.ELEMENT_NODE) return n;
-
-        const originalChild = n;
-        const originalParent = n.parentNode!;
-        const wrappingSpan = document.createElement("span");
-        originalParent.replaceChild(wrappingSpan, originalChild);
-        wrappingSpan.append(n);
-        restorations.push({
-            parent: originalParent,
-            child: originalChild,
-            wrapper: wrappingSpan,
-        });
-        return wrappingSpan;
-    }
-
-    function restoreWrappers(result: string): string {
-        while (restorations.length > 0) {
-            const restoration = restorations.pop()!;
-            restoration.parent.replaceChild(restoration.child, restoration.wrapper);
-        }
-        return result;
-    }
-
-    function clearCache(result: string): string {
-        clearUrlCache();
+    const session = new RenderSession(options);
+    const frame = resolveRenderFrame(node, options);
+    return buildSvgDataUri(node, options, frame, session).finally(() => {
+        session.clearUrlCache();
         removeSandbox();
-        return result;
-    }
-
-    function applyOptions(clone: Node): Promise<Node> {
-        const el = clone as HTMLElement;
-        if (options.bgcolor) el.style.backgroundColor = options.bgcolor;
-        if (options.width) el.style.width = `${options.width}px`;
-        if (options.height) el.style.height = `${options.height}px`;
-
-        if (options.style) {
-            for (const [property, value] of Object.entries(options.style)) {
-                (el.style as unknown as Record<string, string>)[property] = value;
-            }
-        }
-
-        const onCloneResult =
-            typeof options.onclone === "function" ? options.onclone(el) : null;
-        return Promise.resolve(onCloneResult).then(() => el);
-    }
-
-    function makeSvgDataUri(clone: Node): string {
-        (clone as Element).setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-        const xhtml = util.escapeXhtml(
-            new XMLSerializer().serializeToString(clone),
-        );
-
-        const foreignObjectSizing =
-            (util.isDimensionMissing(frame.sourceWidth)
-                ? ' width="100%"'
-                : ` width="${frame.sourceWidth}"`) +
-            (util.isDimensionMissing(frame.sourceHeight)
-                ? ' height="100%"'
-                : ` height="${frame.sourceHeight}"`);
-        const svgSizing =
-            (util.isDimensionMissing(frame.sourceWidth)
-                ? ""
-                : ` width="${frame.sourceWidth}"`) +
-            (util.isDimensionMissing(frame.sourceHeight)
-                ? ""
-                : ` height="${frame.sourceHeight}"`);
-
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg"${svgSizing}><foreignObject${foreignObjectSizing}>${xhtml}</foreignObject></svg>`;
-        return `data:image/svg+xml;charset=utf-8,${svg}`;
-    }
+    });
 }
 
 export function toPixelData(
@@ -153,22 +223,27 @@ export function toBlob(node: Node, options?: Options): Promise<Blob> {
     return withRenderer((renderer) => renderer.toBlob(node, options));
 }
 
+/** @deprecated Use `getCanvas` for live rendering or `toPng`/`toJpeg` for one-shot export. */
+export function toCanvas(
+    node: Node,
+    options?: Options,
+): Promise<HTMLCanvasElement> {
+    const renderer = new Renderer();
+    return renderer.render(node, options).then(
+        (canvas) => {
+            renderer.session.clearUrlCache();
+            removeSandbox();
+            return canvas;
+        },
+        (error) => {
+            renderer.dispose();
+            removeSandbox();
+            throw error;
+        },
+    );
+}
+
 // ─── Internal helpers ───────────────────────────────────
-
-function embedFonts(node: Node): Promise<Node> {
-    return resolveAllFontFaces().then((cssText) => {
-        if (cssText !== "") {
-            const styleNode = document.createElement("style");
-            (node as Element).appendChild(styleNode);
-            styleNode.appendChild(document.createTextNode(cssText));
-        }
-        return node;
-    });
-}
-
-function inlineImages(node: Node): Promise<Node> {
-    return inlineAllImages(node).then(() => node);
-}
 
 function withRenderer<T>(
     render: (renderer: Renderer) => Promise<T>,
@@ -177,11 +252,17 @@ function withRenderer<T>(
     return render(renderer).then(
         (result) => {
             renderer.dispose();
+            removeSandbox();
             return result;
         },
         (error) => {
             renderer.dispose();
+            removeSandbox();
             throw error;
         },
     );
+}
+
+function getRenderMode(options: Options): CanvasRenderMode {
+    return options.mode === "continuous" ? "continuous" : "dirty";
 }

@@ -2,6 +2,7 @@ export {
     DomFrame,
     useDomRenderer,
     useDomFrame,
+    useCanvasHandle,
 } from "./src/react.tsx";
 
 export type {
@@ -14,3 +15,5 @@ export type {
     DomRendererController,
     DomFrameProps,
 } from "./src/react.tsx";
+
+export type { CanvasHandle } from "@dynaruid/dom-to-canvas";

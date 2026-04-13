@@ -4,7 +4,8 @@ import {
     type ResolvedRenderFrame,
 } from "./render-size.ts";
 import * as util from "./util.ts";
-import { toSvg } from "../index.ts";
+import { RenderSession } from "./state.ts";
+import { buildSvgDataUri } from "./pipeline.ts";
 
 export interface RenderSize {
     width: number;
@@ -27,9 +28,15 @@ export class Renderer {
     private _canvas: HTMLCanvasElement;
     private _ctx: CanvasRenderingContext2D | null = null;
     private _configuredContext: CanvasRenderingContext2D | null = null;
+    readonly session: RenderSession;
 
     constructor() {
         this._canvas = document.createElement("canvas");
+        this.session = new RenderSession();
+    }
+
+    get canvas(): HTMLCanvasElement {
+        return this._canvas;
     }
 
     get width(): number {
@@ -102,6 +109,11 @@ export class Renderer {
         );
     }
 
+    async render(node: Node, options?: Options): Promise<HTMLCanvasElement> {
+        await this._draw(node, options);
+        return this._canvas;
+    }
+
     async toPng(node: Node, options?: Options): Promise<string> {
         await this._draw(node, options);
         return this._canvas.toDataURL();
@@ -113,6 +125,7 @@ export class Renderer {
     }
 
     dispose(): void {
+        this.session.clearUrlCache();
         this._configuredContext = null;
         this._ctx = null;
         this._canvas.width = 0;
@@ -142,8 +155,9 @@ export class Renderer {
         options: Options = {},
         frame: ResolvedRenderFrame = resolveRenderFrame(node, options),
     ): Promise<CanvasRenderingContext2D> {
-        const svgDataUri = await toSvg(node, options, frame);
-        const imagePromise = util.makeImage(svgDataUri);
+        this.session.updateOptions(options);
+        const svgDataUri = await buildSvgDataUri(node, options, frame, this.session);
+        const imagePromise = util.makeImage(svgDataUri, this.session);
         const resized = this._resize(
             frame.canvasWidth,
             frame.canvasHeight,

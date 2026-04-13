@@ -10,6 +10,9 @@ export interface CorsImgConfig {
     data?: Record<string, unknown>;
 }
 
+/** Live rendering strategy used by `getCanvas`. */
+export type CanvasRenderMode = "dirty" | "continuous";
+
 /** Rendering options shared by all public conversion functions. */
 export interface Options {
     /** Skip nodes that return `false`. The root node is always kept. */
@@ -28,6 +31,8 @@ export interface Options {
     quality?: number;
     /** Canvas scale multiplier for raster outputs. */
     scale?: number;
+    /** Live canvas invalidation mode used by `getCanvas`. One-shot exports ignore this option. */
+    mode?: CanvasRenderMode;
     /** Fallback data URL used when a resource cannot be fetched. */
     imagePlaceholder?: string;
     /** Append a timestamp query param when fetching external resources. */

@@ -25,14 +25,14 @@ export function urlAsRegex(urlValue: string): RegExp {
 export function inline(
     string: string,
     url: string,
-    baseUrl?: string,
-    get?: (url: string) => Promise<string>,
+    baseUrl: string | undefined,
+    get: (url: string) => Promise<string>,
 ): Promise<string> {
     return Promise.resolve(url)
         .then((urlValue) =>
             baseUrl ? util.resolveUrl(urlValue, baseUrl) : urlValue,
         )
-        .then(get || util.getAndEncode)
+        .then(get)
         .then((dataUrl) => {
             const pattern = urlAsRegex(url);
             return string.replace(pattern, `url($1${dataUrl}$1)`);
@@ -41,8 +41,8 @@ export function inline(
 
 export function inlineAll(
     string: string,
-    baseUrl?: string,
-    get?: (url: string) => Promise<string>,
+    baseUrl: string | undefined,
+    get: (url: string) => Promise<string>,
 ): Promise<string> {
     if (!shouldProcess(string)) {
         return Promise.resolve(string);

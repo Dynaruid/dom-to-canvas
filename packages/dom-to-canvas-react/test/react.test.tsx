@@ -6,7 +6,7 @@ import {
   expect,
   test
 } from "bun:test";
-import { act } from "react";
+import { act, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
 import { setupDomEnvironment } from "./support/dom.ts";
@@ -15,7 +15,12 @@ const dom = setupDomEnvironment();
 const reactDomCanvas = await import("../src/react.tsx");
 const { Renderer } = await import("@dynaruid/dom-to-canvas");
 
-const { DomFrame, useDomFrame, useDomRenderer } =
+const {
+  DomFrame,
+  useCanvasHandle,
+  useDomFrame,
+  useDomRenderer
+} =
   reactDomCanvas;
 
 let root: Root | null = null;
@@ -133,6 +138,44 @@ describe("DomFrame", () => {
 
     expect(controllerHasRender).toBe(false);
     expect(stateHasRender).toBe(false);
+  });
+
+  test("useCanvasHandle exposes a live handle and updates options", async () => {
+    let liveHandle:
+      | ReturnType<typeof useCanvasHandle>
+      | undefined;
+
+    function Probe({
+      bgcolor
+    }: {
+      bgcolor?: string;
+    }) {
+      const ref = useRef<HTMLDivElement | null>(null);
+      const handle = useCanvasHandle(
+        ref,
+        bgcolor === undefined
+          ? undefined
+          : { bgcolor }
+      );
+
+      liveHandle = handle;
+
+      return <div ref={ref}>probe</div>;
+    }
+
+    await act(async () => {
+      root?.render(<Probe bgcolor="#112233" />);
+      await Promise.resolve();
+    });
+
+    expect(liveHandle?.options.bgcolor).toBe("#112233");
+
+    await act(async () => {
+      root?.render(<Probe />);
+      await Promise.resolve();
+    });
+
+    expect(liveHandle?.options.bgcolor).toBeUndefined();
   });
 
   test("copies pixel data into a caller-provided buffer", async () => {

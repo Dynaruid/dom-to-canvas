@@ -1,4 +1,5 @@
-import { state, OFFSCREEN } from "./state.ts";
+import { OFFSCREEN } from "./state.ts";
+import type { RenderSession } from "./state.ts";
 
 const ELEMENT_NODE = typeof Node !== "undefined" ? Node.ELEMENT_NODE : 1;
 
@@ -167,6 +168,7 @@ function fourRandomChars(): string {
 
 export function makeImage(
     uri: string,
+    session: RenderSession,
 ): Promise<HTMLImageElement | undefined> {
     if (uri === "data:,") {
         return Promise.resolve(undefined);
@@ -176,7 +178,7 @@ export function makeImage(
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         const image = new Image();
 
-        if (state.options.useCredentials) {
+        if (session.options.useCredentials) {
             image.crossOrigin = "use-credentials";
         }
 
@@ -253,23 +255,23 @@ export function resolveUrl(url: string, baseUrl: string): string {
 
 // ─── Resource fetching ──────────────────────────────────
 
-export function getAndEncode(url: string): Promise<string> {
-    let cacheEntry = state.urlCache.find((el) => el.url === url);
+export function getAndEncode(url: string, session: RenderSession): Promise<string> {
+    let cacheEntry = session.urlCache.find((el) => el.url === url);
 
     if (!cacheEntry) {
         cacheEntry = { url, promise: null };
-        state.urlCache.push(cacheEntry);
+        session.urlCache.push(cacheEntry);
     }
 
     if (cacheEntry.promise === null) {
         let fetchUrl = url;
-        if (state.options.cacheBust) {
+        if (session.options.cacheBust) {
             fetchUrl += (/\?/.test(fetchUrl) ? "&" : "?") + new Date().getTime();
         }
 
         cacheEntry.promise = new Promise<string>((resolve) => {
             const xhr = new XMLHttpRequest();
-            xhr.timeout = state.options.httpTimeout;
+            xhr.timeout = session.options.httpTimeout;
             xhr.onerror = placehold;
             xhr.ontimeout = placehold;
 
@@ -306,7 +308,7 @@ export function getAndEncode(url: string): Promise<string> {
             }
 
             function placehold(): void {
-                const placeholder = state.options.imagePlaceholder;
+                const placeholder = session.options.imagePlaceholder;
                 if (placeholder) {
                     resolve(placeholder);
                 } else {
@@ -323,40 +325,40 @@ export function getAndEncode(url: string): Promise<string> {
                 }
             }
 
-            if (state.options.useCredentialsFilters.length > 0) {
-                state.options.useCredentials =
-                    state.options.useCredentialsFilters.some(
+            if (session.options.useCredentialsFilters.length > 0) {
+                session.options.useCredentials =
+                    session.options.useCredentialsFilters.some(
                         (filter) => fetchUrl.search(filter as string) >= 0,
                     );
             }
 
-            if (state.options.useCredentials) {
+            if (session.options.useCredentials) {
                 xhr.withCredentials = true;
             }
 
             if (
-                state.options.corsImg &&
+                session.options.corsImg &&
                 fetchUrl.indexOf("http") === 0 &&
                 fetchUrl.indexOf(window.location.origin) === -1
             ) {
                 const method =
-                    (state.options.corsImg.method || "GET").toUpperCase() === "POST"
+                    (session.options.corsImg.method || "GET").toUpperCase() === "POST"
                         ? "POST"
                         : "GET";
                 xhr.open(
                     method,
-                    (state.options.corsImg.url || "").replace("#{cors}", fetchUrl),
+                    (session.options.corsImg.url || "").replace("#{cors}", fetchUrl),
                     true,
                 );
 
                 let isJson = false;
-                const headers = state.options.corsImg.headers || {};
+                const headers = session.options.corsImg.headers || {};
                 for (const [key, value] of Object.entries(headers)) {
                     if (value.includes("application/json")) isJson = true;
                     xhr.setRequestHeader(key, value);
                 }
 
-                const corsData = handleJson(state.options.corsImg.data || "");
+                const corsData = handleJson(session.options.corsImg.data || "");
                 for (const key of Object.keys(corsData)) {
                     if (typeof corsData[key] === "string") {
                         corsData[key] = (corsData[key] as string).replace(
