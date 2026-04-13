@@ -100,16 +100,16 @@ handle.dispose();
 
 ## One-shot vs Live
 
-| API | Result | Notes |
-| --- | --- | --- |
-| `getCanvas(node, options?)` | `CanvasHandle` | Live canvas owner with lifecycle controls |
-| `toSvg(node, options?)` | `Promise<string>` | SVG data URL |
-| `toPng(node, options?)` | `Promise<string>` | PNG data URL |
-| `toJpeg(node, options?)` | `Promise<string>` | JPEG data URL |
-| `toBlob(node, options?)` | `Promise<Blob>` | PNG `Blob` |
-| `toPixelData(node, options?)` | `Promise<Uint8ClampedArray>` | Copies fresh pixel data |
-| `copyPixelData(node, target, options?)` | `Promise<PixelCopyResult>` | Writes into a caller-owned buffer |
-| `toCanvas(node, options?)` | `Promise<HTMLCanvasElement>` | Deprecated one-shot alias |
+| API                                     | Result                       | Notes                                     |
+| --------------------------------------- | ---------------------------- | ----------------------------------------- |
+| `getCanvas(node, options?)`             | `CanvasHandle`               | Live canvas owner with lifecycle controls |
+| `toSvg(node, options?)`                 | `Promise<string>`            | SVG data URL                              |
+| `toPng(node, options?)`                 | `Promise<string>`            | PNG data URL                              |
+| `toJpeg(node, options?)`                | `Promise<string>`            | JPEG data URL                             |
+| `toBlob(node, options?)`                | `Promise<Blob>`              | PNG `Blob`                                |
+| `toPixelData(node, options?)`           | `Promise<Uint8ClampedArray>` | Copies fresh pixel data                   |
+| `copyPixelData(node, target, options?)` | `Promise<PixelCopyResult>`   | Writes into a caller-owned buffer         |
+| `toCanvas(node, options?)`              | `Promise<HTMLCanvasElement>` | Deprecated one-shot alias                 |
 
 ## CanvasHandle
 
@@ -163,29 +163,29 @@ Low-level per-render resource session used internally by one-shot and live paths
 
 ## Options
 
-| Option                | Type                           | Default    | Description                         |
-| --------------------- | ------------------------------ | ---------- | ----------------------------------- |
-| `filter`              | `(node: Node) => boolean`      | —          | Filter out nodes                    |
-| `bgcolor`             | `string`                       | —          | Background color                    |
-| `width`               | `number`                       | —          | Output width                        |
-| `height`              | `number`                       | —          | Output height                       |
-| `style`               | `Record<string, string>`       | —          | Inline styles to apply              |
-| `quality`             | `number`                       | `1.0`      | JPEG quality (0–1)                  |
-| `scale`               | `number`                       | `1`        | Scale multiplier                    |
-| `mode`                | `"dirty" \| "continuous"`   | `"dirty"` | Live handle invalidation mode       |
-| `imagePlaceholder`    | `string`                       | —          | Data URL fallback for failed images |
-| `cacheBust`           | `boolean`                      | `false`    | Bypass cache for resources          |
-| `useCredentials`      | `boolean`                      | `false`    | Send credentials while fetching     |
-| `useCredentialsFilters` | `(string \| RegExp)[]`       | `[]`       | Restrict credentialed fetches       |
-| `httpTimeout`         | `number`                       | `30000`    | Resource fetch timeout in ms        |
-| `copyDefaultStyles`   | `boolean`                      | `true`     | Copy default element styles         |
-| `styleCaching`        | `"strict" \| "relaxed"`        | `"strict"` | Style computation cache strategy    |
-| `disableEmbedFonts`   | `boolean`                      | `false`    | Skip font embedding                 |
-| `disableInlineImages` | `boolean`                      | `false`    | Skip image inlining                 |
-| `corsImg`             | `CorsImgConfig`                | —          | Proxy cross-origin image fetches    |
-| `onclone`             | `(clone: HTMLElement) => void` | —          | Callback on cloned DOM              |
-| `adjustClonedNode`    | `(orig, clone, after) => void` | —          | Adjust cloned nodes                 |
-| `filterStyles`        | `(el, prop) => boolean`        | —          | Filter style properties             |
+| Option                  | Type                           | Default    | Description                         |
+| ----------------------- | ------------------------------ | ---------- | ----------------------------------- |
+| `filter`                | `(node: Node) => boolean`      | —          | Filter out nodes                    |
+| `bgcolor`               | `string`                       | —          | Background color                    |
+| `width`                 | `number`                       | —          | Output width                        |
+| `height`                | `number`                       | —          | Output height                       |
+| `style`                 | `Record<string, string>`       | —          | Inline styles to apply              |
+| `quality`               | `number`                       | `1.0`      | JPEG quality (0–1)                  |
+| `scale`                 | `number`                       | `1`        | Scale multiplier                    |
+| `mode`                  | `"dirty" \| "continuous"`      | `"dirty"`  | Live handle invalidation mode       |
+| `imagePlaceholder`      | `string`                       | —          | Data URL fallback for failed images |
+| `cacheBust`             | `boolean`                      | `false`    | Bypass cache for resources          |
+| `useCredentials`        | `boolean`                      | `false`    | Send credentials while fetching     |
+| `useCredentialsFilters` | `(string \| RegExp)[]`         | `[]`       | Restrict credentialed fetches       |
+| `httpTimeout`           | `number`                       | `30000`    | Resource fetch timeout in ms        |
+| `copyDefaultStyles`     | `boolean`                      | `true`     | Copy default element styles         |
+| `styleCaching`          | `"strict" \| "relaxed"`        | `"strict"` | Style computation cache strategy    |
+| `disableEmbedFonts`     | `boolean`                      | `false`    | Skip font embedding                 |
+| `disableInlineImages`   | `boolean`                      | `false`    | Skip image inlining                 |
+| `corsImg`               | `CorsImgConfig`                | —          | Proxy cross-origin image fetches    |
+| `onclone`               | `(clone: HTMLElement) => void` | —          | Callback on cloned DOM              |
+| `adjustClonedNode`      | `(orig, clone, after) => void` | —          | Adjust cloned nodes                 |
+| `filterStyles`          | `(el, prop) => boolean`        | —          | Filter style properties             |
 
 ## CSS Animation Policy
 

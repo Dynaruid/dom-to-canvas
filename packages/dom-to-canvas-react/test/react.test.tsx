@@ -13,15 +13,15 @@ import { setupDomEnvironment } from "./support/dom.ts";
 
 const dom = setupDomEnvironment();
 const reactDomCanvas = await import("../src/react.tsx");
-const { Renderer } = await import("@dynaruid/dom-to-canvas");
+const { Renderer } =
+  await import("@dynaruid/dom-to-canvas");
 
 const {
   DomFrame,
   useCanvasHandle,
   useDomFrame,
   useDomRenderer
-} =
-  reactDomCanvas;
+} = reactDomCanvas;
 
 let root: Root | null = null;
 let host: HTMLDivElement | null = null;
@@ -145,17 +145,11 @@ describe("DomFrame", () => {
       | ReturnType<typeof useCanvasHandle>
       | undefined;
 
-    function Probe({
-      bgcolor
-    }: {
-      bgcolor?: string;
-    }) {
+    function Probe({ bgcolor }: { bgcolor?: string }) {
       const ref = useRef<HTMLDivElement | null>(null);
       const handle = useCanvasHandle(
         ref,
-        bgcolor === undefined
-          ? undefined
-          : { bgcolor }
+        bgcolor === undefined ? undefined : { bgcolor }
       );
 
       liveHandle = handle;

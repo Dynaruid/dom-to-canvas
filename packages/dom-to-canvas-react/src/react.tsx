@@ -507,8 +507,12 @@ export function useCanvasHandle(
   ref: MutableRefObject<HTMLElement | null>,
   options?: Options
 ): CanvasHandle | null {
-  const [handle, setHandle] = useState<CanvasHandle | null>(null);
-  const previousOptionsRef = useRef<Options | undefined>(options);
+  const [handle, setHandle] = useState<CanvasHandle | null>(
+    null
+  );
+  const previousOptionsRef = useRef<Options | undefined>(
+    options
+  );
 
   useEffect(() => {
     const el = ref.current;
@@ -534,13 +538,16 @@ export function useCanvasHandle(
       return;
     }
 
-    const previousOptions = previousOptionsRef.current ?? {};
+    const previousOptions =
+      previousOptionsRef.current ?? {};
     const nextOptions = options ?? {};
     const updateOptions = {
       ...nextOptions
     } as Options & Record<string, unknown>;
 
-    for (const key of Object.keys(previousOptions) as Array<keyof Options>) {
+    for (const key of Object.keys(previousOptions) as Array<
+      keyof Options
+    >) {
       if (!(key in nextOptions)) {
         updateOptions[key] = undefined;
       }

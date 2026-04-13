@@ -4,10 +4,10 @@ Monorepo for the `@dynaruid/dom-to-canvas` core renderer and the `@dynaruid/dom-
 
 ## Packages
 
-| Package | Location | Summary |
-| --- | --- | --- |
-| `@dynaruid/dom-to-canvas` | `packages/dom-to-canvas` | One-shot DOM export helpers plus live `getCanvas(node, options?)` handles |
-| `@dynaruid/dom-to-canvas-react` | `packages/dom-to-canvas-react` | React bindings for frame callbacks and live canvas handles |
+| Package                         | Location                       | Summary                                                                   |
+| ------------------------------- | ------------------------------ | ------------------------------------------------------------------------- |
+| `@dynaruid/dom-to-canvas`       | `packages/dom-to-canvas`       | One-shot DOM export helpers plus live `getCanvas(node, options?)` handles |
+| `@dynaruid/dom-to-canvas-react` | `packages/dom-to-canvas-react` | React bindings for frame callbacks and live canvas handles                |
 
 ## API Shape
 

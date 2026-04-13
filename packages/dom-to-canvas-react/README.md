@@ -25,7 +25,10 @@ npx jsr add @dynaruid/dom-to-canvas-react
 ### Frame callback workflow
 
 ```tsx
-import { DomFrame, useDomFrame } from "@dynaruid/dom-to-canvas-react";
+import {
+  DomFrame,
+  useDomFrame
+} from "@dynaruid/dom-to-canvas-react";
 
 function CaptureProbe() {
   useDomFrame((state) => {
